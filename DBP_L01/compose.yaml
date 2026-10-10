@@ -1,0 +1,43 @@
+services:
+  oracle:
+    image: container-registry.oracle.com/database/free:latest-lite
+    container_name: oracle-pbd-lista1
+    restart: "no"
+    ports:
+      - "1521:1521"
+    environment:
+      ORACLE_PWD: ${ORACLE_PWD}
+    volumes:
+      - oracle-pbd-lista1-data:/opt/oracle/oradata
+
+  postgres:
+    image: postgres:18
+    container_name: postgres-pbd-lista1
+    restart: "no"
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres-pbd-lista1-data:/var/lib/postgresql
+
+  pgadmin:
+    image: dpage/pgadmin4:9
+    container_name: pgadmin-pbd-lista1
+    restart: "no"
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+    volumes:
+      - pgadmin-pbd-lista1-data:/var/lib/pgadmin
+    depends_on:
+      - postgres
+
+volumes:
+  oracle-pbd-lista1-data:
+  postgres-pbd-lista1-data:
+  pgadmin-pbd-lista1-data:
