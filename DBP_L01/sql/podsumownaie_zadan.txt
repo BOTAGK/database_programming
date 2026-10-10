@@ -1,0 +1,81 @@
+## Podsumowanie zadania
+
+W ramach zadania utworzono pięć powiązanych tabel: `Funkcje`, `Bandy`, `Wrogowie`, `Kocury` oraz `Wrogowie_kocurow`. Skrypt został przygotowany i uruchomiony najpierw w bazie Oracle, a następnie dostosowany i wykonany w PostgreSQL. W obu systemach udało się utworzyć tabele, ograniczenia oraz wprowadzić wymagane dane.
+
+### Napotkane problemy
+
+Najważniejszym problemem była zależność kołowa pomiędzy tabelami `Bandy` i `Kocury`. Kolumna `Bandy.szef_bandy` wskazuje na `Kocury.pseudo`, natomiast kolumna `Kocury.nr_bandy` wskazuje na `Bandy.nr_bandy`.
+
+Z tego powodu nie można było od razu dodać bandy wraz z jej szefem, ponieważ odpowiedni kot jeszcze nie istniał. Nie można było również najpierw dodać kota, ponieważ przypisana mu banda jeszcze nie istniała.
+
+Problem rozwiązano w następującej kolejności:
+
+1. Dodano bandy z wartością `NULL` w kolumnie `szef_bandy`.
+2. Dodano koty przypisane do istniejących band.
+3. Za pomocą polecenia `UPDATE` uzupełniono szefów band.
+
+Drugim problemem była samoreferencja w tabeli `Kocury`. Kolumna `szef` jest kluczem obcym wskazującym na kolumnę `pseudo` w tej samej tabeli. Koty musiały więc zostać dodane w odpowiedniej kolejności. Najpierw dodano kota `TYGRYS`, który nie ma szefa, następnie koty podlegające `TYGRYSOWI`, a później koty znajdujące się na kolejnych poziomach hierarchii.
+
+### Różnice między Oracle i PostgreSQL
+
+Podczas dostosowywania skryptu tworzącego tabele wprowadzono następujące zmiany:
+
+- typ `VARCHAR2` z Oracle zastąpiono typem `VARCHAR` w PostgreSQL;
+- typ `NUMBER` zastąpiono typem `NUMERIC`;
+- wartość domyślną `SYSDATE` zastąpiono przez `CURRENT_DATE`;
+- Oracle wyświetla niecytowane nazwy tabel i kolumn wielkimi literami, natomiast PostgreSQL zapisuje je domyślnie małymi literami.
+
+W obu bazach podobnie działały ograniczenia:
+
+- `PRIMARY KEY`;
+- `FOREIGN KEY`;
+- `UNIQUE`;
+- `NOT NULL`;
+- `CHECK`;
+- `REFERENCES`.
+
+Różnica pojawiła się również podczas dodawania wielu rekordów. W Oracle zastosowano konstrukcję:
+
+```sql
+INSERT ALL
+    INTO tabela (...) VALUES (...)
+    INTO tabela (...) VALUES (...)
+SELECT 1 FROM dual;
+```
+
+W PostgreSQL wykorzystano prostsze wielowierszowe polecenie:
+
+```sql
+INSERT INTO tabela (...)
+VALUES
+    (...),
+    (...);
+```
+
+Daty zapisano w postaci:
+
+```sql
+DATE '2008-12-01'
+```
+
+Taki zapis był poprawny zarówno w Oracle, jak i w PostgreSQL, dzięki czemu nie trzeba było go modyfikować.
+
+Dodatkową różnicą było polecenie `BEGIN`. W PostgreSQL może ono rozpoczynać transakcję:
+
+```sql
+BEGIN;
+```
+
+W Oracle samo polecenie `BEGIN` rozpoczyna blok PL/SQL i wymaga odpowiedniego zakończenia. Z tego powodu wersji transakcyjnej przeznaczonej dla PostgreSQL nie należało uruchamiać jako skryptu Oracle.
+
+### Wynik końcowy
+
+Po wykonaniu skryptów w obu systemach uzyskano:
+
+- 8 rekordów w tabeli `Funkcje`;
+- 5 rekordów w tabeli `Bandy`;
+- 10 rekordów w tabeli `Wrogowie`;
+- 18 rekordów w tabeli `Kocury`;
+- 18 rekordów w tabeli `Wrogowie_kocurow`.
+
+Obie bazy zawierają ostatecznie ten sam zestaw danych oraz odpowiadające sobie klucze główne, klucze obce i pozostałe ograniczenia. Największe różnice dotyczyły nazw typów danych, wartości domyślnej daty i składni wielowierszowego polecenia `INSERT`.
